@@ -6,11 +6,11 @@ help() {
     echo "       $0 --help"
     echo
     echo "OPTIONS:"
-    echo "  -H,--homebridge Homebridge stoarge path. Default is"
-    echo "                  /var/lib/homebridge."
-    echo "  -n,--network    Docker network to use. Default is host."
-    echo "  -u,--uninstall  Uninstall the files and reload the system."
-    echo "  -h,--help       Print this help menu."
+    echo "  -H,--homebridge <HOMEBRIDGE>    Homebridge stoarge path. Default is"
+    echo "                                  /var/lib/homebridge."
+    echo "  -n,--network <NETWORK>          Docker network to use. Default is host."
+    echo "  -u,--uninstall                  Uninstall the files and reload the system."
+    echo "  -h,--help                       Print this help menu."
 }
 
 HOMEBRIDGE="/var/lib/homebridge"
@@ -44,13 +44,12 @@ while true; do
 done
 
 SYSTEMD="/etc/systemd/system"
-DOCKER_SERVICE="homebridge-docker.service"
+DOCKER_IMAGE="homebridge-docker"
+DOCKER_SERVICE="$DOCKER_IMAGE@.service"
 UNIT_DEST_PATH="$SYSTEMD/$DOCKER_SERVICE"
 if [ -f UNIT_DEST_PATH ]; then
     echo "Stopping $DOCKER_SERVICE..."
-    sudo systemctl stop "$DOCKER_SERVICE" 2>/dev/null
-    echo "Disabling $DOCKER_SERVICE..."
-    sudo systemctl disable "$DOCKER_SERVICE" >/dev/null 2>&1
+    sudo systemctl stop "$DOCKER_IMAGE@*" --all
 fi
 echo "Removing $DOCKER_SERVICE..."
 sudo rm -rf "$UNIT_DEST_PATH"
@@ -62,10 +61,5 @@ if ! "$UNINSTALL"; then
 fi
 
 sudo systemctl daemon-reload
-
-if ! "$UNINSTALL"; then
-    echo "Enabling $DOCKER_SERVICE..."
-    sudo systemctl enable "$DOCKER_SERVICE"
-fi
 
 echo "...Done!"

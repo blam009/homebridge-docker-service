@@ -1,5 +1,5 @@
 [Unit]
-Description="%N service for running homebridge in a container"
+Description="%p Service Running at %i"
 After=network-online.target
 Wants=network-online.target
 After=docker.service
@@ -9,14 +9,11 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=/usr/bin/bash -c "docker network ls --format '{{.Name}}' | grep -q {{NETWORK}}"
 ExecStart=/usr/bin/docker run \
-    --rm --name=%N \
-    --network={{NETWORK}} --dns=1.1.1.1 \
+    --rm --name=%p --hostname=%p \
+    --network={{NETWORK}} --dns=1.1.1.1 --ip=%i \
     --volume {{HOMEBRIDGE}}:/homebridge \
     homebridge/homebridge:latest
-ExecStop=/usr/bin/docker kill -s INT %N
+ExecStop=/usr/bin/docker kill -s INT %p
 SuccessExitStatus=111
 Restart=on-failure
 RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
