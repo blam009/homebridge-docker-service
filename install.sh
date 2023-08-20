@@ -47,15 +47,18 @@ SYSTEMD="/etc/systemd/system"
 DOCKER_IMAGE="homebridge-docker"
 DOCKER_SERVICE="$DOCKER_IMAGE@.service"
 UNIT_DEST_PATH="$SYSTEMD/$DOCKER_SERVICE"
-if [ -f UNIT_DEST_PATH ]; then
+if systemctl is-active "$DOCKER_IMAGE@*" --all --quiet; then
     echo "Stopping $DOCKER_SERVICE..."
     sudo systemctl stop "$DOCKER_IMAGE@*" --all
 fi
-echo "Removing $DOCKER_SERVICE..."
-sudo rm -rf "$UNIT_DEST_PATH"
-
+if [ -f "$UNIT_DEST_PATH" ]; then
+    echo "Removing $DOCKER_SERVICE..."
+    sudo rm -rf "$UNIT_DEST_PATH"
+fi
 if ! "$UNINSTALL"; then
-    echo "Installing $DOCKER_SERVICE.."
+    echo "Pulling latest homebridge docker image..."
+    docker pull homebridge/homebridge:latest
+    echo "Installing $DOCKER_SERVICE..."
     sed "s#{{HOMEBRIDGE}}#$HOMEBRIDGE#g;s#{{NETWORK}}#$NETWORK#g" \
         "$DOCKER_SERVICE" | sudo tee "$UNIT_DEST_PATH" >/dev/null
 fi
